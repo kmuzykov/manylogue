@@ -1,6 +1,6 @@
 [project]
 name = "manylogue"
-version = "0.1.0"
+version = "0.1.1"
 description = "Human-in-the-loop group chat where AI agents like Claude and Codex collaborate in one shared thread"
 readme = "README.md"
 authors = [
@@ -27,10 +27,12 @@ dependencies = [
     "mdit-py-plugins>=0.6.1",
     "openai>=2.37.0",
     "openai-codex==0.1.0b3",
-    # openai-codex's own dependency, re-declared so uv-family installers (uvx, uv pip)
-    # accept the alpha without --prerelease=allow: uv only auto-allows pre-releases for
-    # first-level requirements with pre-release specifiers. Keep the pin in sync with
-    # openai-codex; drop once it ships a stable release.
+    # openai-codex's own dependency, re-declared as an exact pin for deterministic
+    # resolution. NOTE: this does NOT make `uvx manylogue` from PyPI flag-free — uv
+    # only auto-allows pre-releases for first-level requirements of the *request*
+    # (it does help local `--from <wheel>` flows). Index installs need
+    # `uvx --prerelease allow`; pip accepts exact pre-release pins natively. Keep in
+    # sync with openai-codex; drop the pin and the README flag once it ships stable.
     "openai-codex-cli-bin==0.137.0a4",
     "pygments>=2.20.0",
     # imported directly (app.py/config.py, __init__.py) — declared rather than relied on

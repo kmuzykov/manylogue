@@ -25,10 +25,14 @@ auth — no API keys live in Manylogue. See [Agent parity & skills](#agent-parit
 **Option 1 — no clone**, with [uv](https://docs.astral.sh/uv/):
 
 ```
-uvx manylogue                   # serves http://127.0.0.1:8000
+uvx --prerelease allow manylogue        # serves http://127.0.0.1:8000
 ```
 
-or with pip:
+The flag is needed because the Codex SDK is still in beta and pins a pre-release
+runtime, which uv won't resolve from an index without an explicit opt-in. It goes
+away once the SDK ships a stable release.
+
+Or with pip — no flags needed:
 
 ```
 pip install manylogue

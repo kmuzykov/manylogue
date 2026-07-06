@@ -11,7 +11,7 @@ from fastapi.sse import EventSourceResponse, ServerSentEvent
 
 from manylogue import config
 from manylogue.chat import ChatRoom, HUMAN_NAME
-from manylogue.util import render_message_fragment, templates
+from manylogue.util import render_message_fragment, resolve_existing_dir, templates
 from manylogue.agents import AgentDefinition, AddAgentParticipantsRequest
 from manylogue.messages import MessageDraft, MessageKind
 
@@ -63,27 +63,26 @@ async def home(request: Request) -> Response:
 
 @app.post("/chats")
 async def create_chat(request: Request,
-                      chat_name: str = Form(),
-                      chat_project_dir: str = Form()) -> Response:
-
-    project_dir = chat_project_dir.strip()
+                      chat_name: str = Form(""),
+                      chat_project_dir: str = Form("")) -> Response:
 
     # Validate before creating anything. On failure, re-render the home form with an
-    # inline error and the user's input preserved — never a 500. is_dir() (not exists)
-    # so a file path or empty string is rejected too.
-    if not project_dir or not Path(project_dir).is_dir():
+    # inline error and the user's input preserved — never a 500. resolve_existing_dir
+    # rejects files and empty input, and expands ~ so "~/project" is a valid entry.
+    project_dir = resolve_existing_dir(chat_project_dir)
+    if project_dir is None:
         return templates.TemplateResponse(
             request=request, name="index.html",
             context={
                 "chats": ChatRoom.list_chats(config.home()),
-                "error": "That project directory doesn't exist. Enter an absolute path to a folder.",
+                "error": "That project directory doesn't exist. Enter an absolute path (or ~/path) to a folder.",
                 "prefill": {"chat_name": chat_name, "chat_project_dir": chat_project_dir},
             },
             status_code=422,
         )
 
     room = _activate(ChatRoom.create(
-        config.home(), Path(project_dir), chat_name.strip() or "untitled"))
+        config.home(), project_dir, chat_name.strip() or "untitled"))
     return RedirectResponse(url=f"/chat/{room.chat_id}", status_code=303)
 
 

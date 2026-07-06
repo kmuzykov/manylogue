@@ -1,0 +1,51 @@
+# Cross-platform install/boot smoke. Runners have no Claude/Codex CLI and no
+# subscription auth, so this proves the package installs, imports, and serves -
+# actual agent turns still need a human with logged-in CLIs.
+name: smoke
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7.0.0
+      - uses: astral-sh/setup-uv@v8.3.0
+        with:
+          python-version: "3.12"
+
+      - name: Test suite
+        run: |
+          uv sync --frozen
+          uv run pytest -q
+
+      - name: Install the wheel like a user
+        shell: bash
+        run: |
+          uv build
+          uvx --from dist/manylogue-*.whl manylogue --help
+
+      # Boot with an isolated --home and probe the two routes a browser hits first.
+      # Skipped on Windows: background-process/kill semantics are unreliable in
+      # runner Git Bash, and Windows boot is covered by local testing.
+      - name: Boot the server and probe it
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          uvx --from dist/manylogue-*.whl manylogue --home "$RUNNER_TEMP/smoke-home" --port 8123 &
+          SERVER_PID=$!
+          for i in $(seq 1 30); do
+            curl -fsS http://127.0.0.1:8123/ > /dev/null && break
+            if [ "$i" = 30 ]; then echo "server never came up"; kill $SERVER_PID; exit 1; fi
+            sleep 1
+          done
+          curl -fsS http://127.0.0.1:8123/static/favicon.svg > /dev/null
+          kill $SERVER_PID

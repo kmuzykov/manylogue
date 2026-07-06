@@ -22,7 +22,7 @@ _ALLOWED_WHEEL = [re.compile(p) for p in (
     r"^manylogue-[^/]+\.dist-info/.+$",
     r"^manylogue/(?:[A-Za-z0-9_]+/)*[A-Za-z0-9_]+\.py$",
     r"^manylogue/templates/[A-Za-z0-9_-]+\.html$",
-    r"^manylogue/static/[A-Za-z0-9_-]+\.css$",
+    r"^manylogue/static/[A-Za-z0-9_-]+\.(?:css|svg)$",
     r"^manylogue/defaults/agents/[A-Za-z0-9_-]+\.toml$",
     r"^manylogue/defaults/roles/[A-Za-z0-9_-]+\.md$",
 )]

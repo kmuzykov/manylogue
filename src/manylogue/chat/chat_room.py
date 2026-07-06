@@ -13,7 +13,7 @@ from manylogue.chat.chat_meta_storage import ChatMetaStorage, ChatMetaModel
 from manylogue.config.constants import HUMAN_NAME
 from manylogue.messages import MessagesStorage, MessageDraft, Message
 from manylogue.messages.agent_stream_event import AgentResponseStreamEventType, AgentStreamEvent, AgentTurnOutcome
-from manylogue.util import is_chat_name_valid, make_chat_id, pick_unique_name
+from manylogue.util import is_chat_name_valid, make_chat_id, pick_unique_name, resolve_existing_dir
 
 MAX_ROUNDS = 20
 
@@ -100,8 +100,10 @@ class ChatRoom():
                 return
 
             # Validate the cwd and fall back to the chat default; don't trust the caller.
-            if agent_project_dir is None or not Path(agent_project_dir).is_dir():
-                agent_project_dir = str(self._meta.default_project_dir)
+            # ~ and relative input resolve to an absolute path, same as chat creation.
+            resolved_dir = resolve_existing_dir(agent_project_dir)
+            agent_project_dir = str(
+                resolved_dir if resolved_dir is not None else self._meta.default_project_dir)
 
             # Dedup happens here (the room knows the roster) so multiple instances of the same agent def can be added
             # the resolved name is persisted and reused verbatim on load — never re-derived.

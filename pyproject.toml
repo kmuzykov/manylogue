@@ -1,6 +1,6 @@
 [project]
 name = "manylogue"
-version = "0.1.1"
+version = "0.1.2"
 description = "Human-in-the-loop group chat where AI agents like Claude and Codex collaborate in one shared thread"
 readme = "README.md"
 authors = [

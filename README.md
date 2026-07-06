@@ -1,7 +1,9 @@
 # Manylogue
 
-Human-chaired, multi-agent group chat. Several AI agents — Claude and Codex today —
-converse with each other and with you in one room, streaming their
+[![smoke](https://github.com/kmuzykov/manylogue/actions/workflows/smoke.yml/badge.svg?branch=main)](https://github.com/kmuzykov/manylogue/actions/workflows/smoke.yml)
+
+Human-chaired group chat for cross-model multi-agent collaboration. Several AI agents —
+Claude and Codex today — converse with each other and with you in one room, streaming their
 intermediate work (narration, tool calls) live and committing one final answer per turn.
 The point is to make multi-agent collaboration *legible*: you see who is thinking, what
 they are doing, and how the conversation settles, instead of black-box orchestration.
@@ -10,17 +12,31 @@ It's a FastAPI app: you chair the thread, and each agent's adapter responds in t
 against a project working directory you choose. The transcript is plain JSONL on disk —
 readable, diffable, and durable across restarts.
 
+For the why and real examples — a room reversing a wrong consensus, catching its own
+groupthink — read the introduction post:
+[Manylogue: Cross-Model Multi-Agent Collaboration System](https://muzykov.com/manylogue-cross-model-multi-agent-collaboration-system/).
+
 > [!warning]
 > Manylogue is a personal project meant to run locally, and it runs agents with their
 > permission prompts disabled. Read [Security](#security) before pointing it at anything
 > you care about.
 
-## Install & run
+## Prerequisites
 
-Requires Python 3.12+, plus the [Claude Code](https://docs.anthropic.com/en/docs/claude-code)
-and/or [Codex](https://developers.openai.com/codex/cli) CLI, installed and authenticated.
-Manylogue drives the agents through the official SDKs, so it reuses your subscription
-auth — no API keys live in Manylogue. See [Agent parity & skills](#agent-parity--skills).
+- **Python 3.12+**, and [uv](https://docs.astral.sh/uv/getting-started/installation/) for
+  the no-clone install below (pip works too).
+- **[Claude Code](https://code.claude.com/docs/en/setup)** — to chat with Claude agents.
+  Install it, run `claude` once to log in, then verify: `claude -p "Say exactly OK"`
+  prints OK.
+- **[Codex CLI](https://developers.openai.com/codex/cli)** — to chat with Codex agents.
+  Install it, run `codex` once to sign in, then verify: `codex login status` prints
+  `Logged in using ChatGPT`.
+
+One agent CLI is enough to start, but cross-model rooms need both. Manylogue drives the
+agents through the official SDKs and reuses the CLIs' subscription logins — no API keys
+live in Manylogue. See [Agent parity & skills](#agent-parity--skills).
+
+## Install & run
 
 **Option 1 — no clone**, with [uv](https://docs.astral.sh/uv/):
 

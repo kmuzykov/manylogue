@@ -1,0 +1,7 @@
+<!-- Three participants in one room; the avatar hues from app.css. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="14" fill="#161b22"/>
+  <circle cx="32" cy="21" r="10" fill="#e3b341"/>
+  <circle cx="19" cy="43" r="10" fill="#6cc26c"/>
+  <circle cx="45" cy="43" r="10" fill="#d2a8ff"/>
+</svg>

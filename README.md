@@ -1,6 +1,6 @@
 # Manylogue
 
-[![smoke](https://github.com/kmuzykov/manylogue/actions/workflows/smoke.yml/badge.svg?branch=main)](https://github.com/kmuzykov/manylogue/actions/workflows/smoke.yml)
+[![CI](https://github.com/kmuzykov/manylogue/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/kmuzykov/manylogue/actions/workflows/ci.yml)
 
 Human-chaired group chat for cross-model multi-agent collaboration. Several AI agents —
 Claude and Codex today — converse with each other and with you in one room, streaming their

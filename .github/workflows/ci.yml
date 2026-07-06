@@ -1,7 +1,7 @@
 # Cross-platform install/boot smoke. Runners have no Claude/Codex CLI and no
 # subscription auth, so this proves the package installs, imports, and serves -
 # actual agent turns still need a human with logged-in CLIs.
-name: smoke
+name: CI
 
 on:
   push:

@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+{% block title %} {{ chat_name }} · Manylogue {% endblock %}
+{% block body %}
+<div id="chat">
+    <aside id="chats-list">
+        <a class="new-chat-link" href="/">+ New chat</a>
+        <div id="chats-list-items">Loading…</div>
+    </aside>
+    <main id="chat-text">
+        <header id="chat-header">
+            <h1 class="chat-title">{{ chat_name }}</h1>
+        </header>
+        <div id="messages">
+            <div id="chat-loading">Loading…</div>
+        </div>
+        <div id="agent-stream"></div>
+    </main>
+    <aside id="chat-participants">
+        <a id="add-participant-link" class="add-participant-link" href="#">+ Add participant</a>
+        <div class="panel-label">In the room</div>
+        {% for participant in participants %}
+        <div class="roster-row{% if participant.is_missing %} roster-row--missing{% endif %}"
+            data-author="{{ participant.name }}">
+            <span class="roster-status" aria-hidden="true"
+                title="{% if participant.is_missing %}Definition missing — not participating{% else %}Online{% endif %}"></span>
+            <div class="avatar {{ participant.name | avatar_class }}" aria-hidden="true">{{ participant.name | avatar_initial }}
+            </div>
+            <span class="roster-name">{{ participant.name }}{% if participant.is_missing %} <span
+                    class="roster-missing-tag">(missing)</span>{% endif %}</span>
+        </div>
+        {% endfor %}
+    </aside>
+    <form id="chat-text-area" method="post">
+        <textarea id="chat-text-input" name="chat_text_msg" rows="3"
+            placeholder="Type a message… (Enter to send, Shift+Enter for newline)"></textarea>
+        <button id="chat-text-submit">Send</button>
+    </form>
+</div>
+
+{# Add-participant dialog — native <dialog>, the sanctioned floating layer. #}
+    <dialog id="add-participant-dialog" class="dialog">
+        <form id="add-participant-form" class="dialog-card">
+            <header class="dialog-head">
+                <h2 class="dialog-title">Add participants</h2>
+                <p class="dialog-sub">Pick an agent for each seat. They join this room and start taking turns.</p>
+            </header>
+
+            <div id="participant-rows" class="participant-rows">
+                {# Row template — JS clones the first row for "Add another". #}
+                <div class="participant-row">
+                    <div class="select-wrap">
+                        <select class="participant-def" name="agent_def">
+                            <option value="" disabled selected>Select an agent…</option>
+                            {% for agent_def in available_agents %}
+                            <option value="{{ agent_def.name }}">{{ agent_def.name }} </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <input class="participant-cwd" type="text" disabled value="{{ default_project_path }}"
+                        title="Inherits the chat's project directory — per-agent override comes later." />
+                    <button type="button" class="participant-remove" aria-label="Remove seat">×</button>
+                </div>
+            </div>
+
+            <button type="button" id="add-participant-row" class="row-add">+ Add another</button>
+
+            <footer class="dialog-foot">
+                <button type="button" class="btn-ghost" id="add-participant-cancel">Cancel</button>
+                <button type="submit" class="btn-primary">Add to room</button>
+            </footer>
+        </form>
+    </dialog>
+
+    <script>
+        const messagesEl = document.getElementById("messages");
+        const agent_stream = document.getElementById("agent-stream");
+        const form = document.getElementById("chat-text-area");
+        const input = document.getElementById("chat-text-input");
+        const chatId = location.pathname.split("/").pop();
+        const add_participant_link = document.getElementById('add-participant-link')
+
+        // identity helpers — must match _avatar_class / _avatar_initial in app.py
+        const AVATAR_HUES = 6;
+        const avatarClass = (n) => n === "Human" ? "av-human" : "av-" + ([...n].reduce((a, c) => a + c.charCodeAt(0), 0) % AVATAR_HUES);
+        const avatarInitial = (n) => (n.slice(0, 2) || "?").toUpperCase();
+
+        const scrollDown = () => { messagesEl.scrollTop = messagesEl.scrollHeight; };
+
+        // roster status dot. "online" is the resting state (filled green); "working" pulses
+        // while the model is engaged; "skipped" is a hollow ring until that agent's next turn.
+        const ROSTER_TITLES = { online: "Online", working: "Thinking…", skipped: "Passed this turn — nothing to add" };
+        const setRosterState = (author, state) => {
+            const row = document.querySelector(`#chat-participants .roster-row[data-author="${CSS.escape(author)}"]`);
+            if (!row) return;
+            row.classList.toggle("working", state === "working");
+            row.classList.toggle("skipped", state === "skipped");
+            const dot = row.querySelector(".roster-status");
+            if (dot) dot.title = ROSTER_TITLES[state] ?? ROSTER_TITLES.online;
+        };
+
+        const lastMsg = messagesEl.querySelector(".chat-text-message:last-child");
+        const since = lastMsg ? lastMsg.dataset.id : "";
+
+        const es = new EventSource("/chat/" + chatId + "/stream" + (since ? "?since=" + encodeURIComponent(since) : ""));
+
+        // status is live-only; on (re)connect, reset the transient area + every dot back to online
+        es.onopen = () => {
+            agent_stream.innerHTML = "";
+            document.querySelectorAll("#chat-participants .roster-row").forEach(r => {
+                r.classList.remove("working", "skipped");
+                const dot = r.querySelector(".roster-status");
+                if (dot) dot.title = ROSTER_TITLES.online;
+            });
+        };
+
+        // committed messages (answers + errors) — server-rendered HTML
+        es.onmessage = (e) => {
+            document.getElementById("chat-loading")?.remove();
+            messagesEl.insertAdjacentHTML("beforeend", e.data);
+            messagesEl.lastElementChild?.classList.add("msg-enter");  // animate only newly-arrived messages
+            scrollDown();
+        };
+
+        // turn started — model engaged; light the dot before any output arrives (fills the dead air)
+        es.addEventListener("agent_turn_start", (e) => {
+            const { author } = JSON.parse(e.data);
+            setRosterState(author, "working");
+        });
+
+        // agent-stream — upsert a per-author block, append a line; keep the roster lit
+        es.addEventListener("agent_stream_event", (e) => {
+            const { author, type, body } = JSON.parse(e.data);
+            setRosterState(author, "working");
+            let blk = agent_stream.querySelector(`.agent-stream-item[data-author="${CSS.escape(author)}"]`);
+            if (!blk) {
+                blk = document.createElement("div");
+                blk.className = "agent-stream-item";
+                blk.dataset.author = author;
+                blk.innerHTML = `<div class="agent-stream-head"><div class="avatar" aria-hidden="true"></div><span class="agent-stream-author"></span></div><div class="agent-stream-lines"></div>`;
+                const avatar = blk.querySelector(".avatar");
+                avatar.classList.add(avatarClass(author));
+                avatar.textContent = avatarInitial(author);   // textContent, like the stream lines: nothing author-derived hits innerHTML
+                blk.querySelector(".agent-stream-author").textContent = `${author} is working…`;
+                agent_stream.appendChild(blk);
+            }
+            const line = document.createElement("div");
+            line.className = "agent-stream-line";
+            line.textContent = (type === "tool" ? "🔧 " : "") + body;   // textContent: no XSS from model output
+            const lines = blk.querySelector(".agent-stream-lines");
+            lines.appendChild(line);
+            lines.scrollTop = lines.scrollHeight;   // keep the latest line in view as it streams
+        });
+
+        // turn ended — drop that author's stream block; grey the dot if it skipped, else back to online
+        es.addEventListener("agent_stream_end", (e) => {
+            const { author, outcome } = JSON.parse(e.data);
+            setRosterState(author, outcome === "skipped" ? "skipped" : "online");
+            agent_stream.querySelector(`.agent-stream-item[data-author="${CSS.escape(author)}"]`)?.remove();
+        });
+
+        // Submit via fetch (no reload). Clear the textarea; the message echoes back over SSE.
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const text = input.value.trim();
+            if (!text) return;
+            input.value = "";
+            await fetch("/chat/" + chatId, {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: new URLSearchParams({ chat_text_msg: text }),
+            });
+        });
+
+        input.addEventListener("keydown", (e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                form.requestSubmit();
+            }
+        });
+        input.focus();
+
+        // Add-participant dialog ------------------------------------------------
+        const apDialog = document.getElementById("add-participant-dialog");
+        const apRows = document.getElementById("participant-rows");
+
+        add_participant_link.addEventListener("click", (e) => {
+            e.preventDefault();
+            apDialog.showModal();
+        });
+        document.getElementById("add-participant-cancel").addEventListener("click", () => apDialog.close());
+
+        // "Add another" clones the first row; the × removes one (keep at least one)
+        document.getElementById("add-participant-row").addEventListener("click", () => {
+            const row = apRows.firstElementChild.cloneNode(true);
+            row.querySelector(".participant-def").value = "";   // clear the cloned selection
+            apRows.appendChild(row);
+        });
+        apRows.addEventListener("click", (e) => {
+            if (!e.target.classList.contains("participant-remove")) return;
+            if (apRows.children.length > 1) e.target.closest(".participant-row").remove();
+        });
+
+        document.getElementById("add-participant-form").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            // One entry per row: the agent name (its id) + the directory. The cwd input is
+            // disabled/inherited for now, but JS can still read its .value — so we send it, and
+            // turning per-agent overrides on later is just "un-disable the input", no shape change.
+            const participants = [...apRows.querySelectorAll(".participant-row")]
+                .map(row => ({
+                    name: row.querySelector(".participant-def").value,
+                    directory: row.querySelector(".participant-cwd").value,
+                }))
+                .filter(p => p.name);   // drop rows where no agent was picked
+            if (!participants.length) return;
+
+            const res = await fetch(`/chat/${chatId}/participants`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ participants }),
+            });
+            if (res.ok) {
+                apDialog.close();
+                location.reload();   // re-render the roster with the new participants
+            } else {
+                console.error("add participants failed:", res.status);
+                // todo: surface the error inside the dialog instead of just logging
+            }
+        });
+
+        // refresh the chat list periodically (read-only; swap only on success to avoid flicker)
+        const chatsListItems = document.getElementById('chats-list-items');
+        const markCurrent = () => {
+            chatsListItems.querySelector(`.chat-name a[href="/chat/${chatId}"]`)?.closest(".chat-name")?.classList.add("chat-name--current");
+        };
+        const update_chats = async () => {
+            const response = await fetch("/chats-list", { method: "GET" });
+            if (response.ok) { chatsListItems.innerHTML = await response.text(); markCurrent(); }
+        };
+        update_chats();
+        window.setInterval(update_chats, 30000); // every 30 seconds
+    </script>
+    {% endblock %}

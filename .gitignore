@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.pytest_cache/
+
+# Build artifacts — never commit; wheels/sdists can embed stray files from src/
+dist/
+
+# uv local caches
+.uv-cache*/
+
+# Environment / secrets
+.env
+
+# Manylogue local config (agents, roles) + chat history — per-user runtime state.
+# Never commit chats or a seeded home into the repo.
+.manylogue/
+
+# Editor state, incl. review-comments threads (vscode-review-comments extension)
+.vscode/
+
+# Logs and runtime state
+*.log
+*.err
+*.out
+*.stdout.log
+*.stderr.log

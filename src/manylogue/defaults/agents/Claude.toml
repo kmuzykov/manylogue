@@ -1,0 +1,4 @@
+adapter = "ClaudeAdapter"
+description = "Vanilla Claude / No Role"
+role = "roles/empty_role.md"
+model = "claude-opus-4-8[1m]"

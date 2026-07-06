@@ -1,0 +1,20 @@
+<div class="chat-text-message chat-text-message--{{ msg.kind.value }}" data-id="{{ msg.id }}" data-author="{{ msg.author }}">
+    <div class="avatar {{ msg.author | avatar_class }}" aria-hidden="true">{{ msg.author | avatar_initial }}</div>
+    <div class="chat-text-message-main">
+        <div class="chat-text-message-header">
+            <span class="chat-text-message-author">{{ msg.author }}</span>
+            <time class="chat-text-message-time">{{ msg.ts.strftime("%H:%M") }}</time>
+        </div>
+        {% if msg.thread %}
+        <details class="chat-text-message-work">
+            <summary>Agent stream ({{ msg.thread | length }})</summary>
+            {% for item in msg.thread %}
+            <div class="work-line">{{ "🔧 " if item.type.value == "tool" else "" }}{{ item.body }}</div>
+            {% endfor %}
+        </details>
+        {% endif %}
+        <div class="chat-text-message-body">
+            {{ msg.body | markdown | safe }}
+        </div>
+    </div>
+</div>

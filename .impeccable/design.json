@@ -1,0 +1,139 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-06-18T14:38:00+02:00",
+  "title": "Design System: Manylogue",
+  "extensions": {
+    "colorMeta": {
+      "accent": {
+        "role": "primary",
+        "displayName": "Signal Blue",
+        "canonical": "#58a6ff",
+        "tonalRamp": ["#0a1a2f", "#0e2747", "#123862", "#1a4d82", "#2563a3", "#3a7fc4", "#58a6ff", "#9ccaff"]
+      },
+      "canvas": {
+        "role": "neutral",
+        "displayName": "Canvas",
+        "canonical": "#0d1117",
+        "tonalRamp": ["#0d1117", "#161b22", "#21262d", "#30363d", "#484f58", "#6e7681", "#8b949e", "#c9d1d9"]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Surface",
+        "canonical": "#161b22",
+        "tonalRamp": ["#0d1117", "#161b22", "#21262d", "#30363d", "#484f58", "#6e7681", "#8b949e", "#c9d1d9"]
+      },
+      "surface-raised": {
+        "role": "neutral",
+        "displayName": "Surface Raised",
+        "canonical": "#21262d"
+      },
+      "code-surface": {
+        "role": "neutral",
+        "displayName": "Code Surface",
+        "canonical": "#282a36"
+      },
+      "border": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "canonical": "#30363d"
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "#c9d1d9",
+        "tonalRamp": ["#161b22", "#21262d", "#30363d", "#484f58", "#6e7681", "#8b949e", "#c9d1d9", "#f0f6fc"]
+      },
+      "ink-muted": {
+        "role": "neutral",
+        "displayName": "Ink Muted",
+        "canonical": "#8b949e"
+      },
+      "ink-strong": {
+        "role": "neutral",
+        "displayName": "Ink Strong",
+        "canonical": "#f0f6fc"
+      }
+    },
+    "typographyMeta": {
+      "author": { "displayName": "Author", "purpose": "Name heading each committed message. Largest type in the system; under review as louder than the minimal target." },
+      "heading": { "displayName": "Heading", "purpose": "Markdown headings inside message bodies." },
+      "body": { "displayName": "Body", "purpose": "All prose and UI text." },
+      "mono": { "displayName": "Mono", "purpose": "Code, inline code, and machine identifiers only." },
+      "label": { "displayName": "Label", "purpose": "Timestamps, sidebar entries, agent-stream lines." }
+    },
+    "shadows": [],
+    "motion": [
+      { "name": "duration-state", "value": "180ms", "purpose": "Recommended default for state transitions (hover, focus, selection). Target band 150-250ms." },
+      { "name": "ease-out", "value": "cubic-bezier(0.22, 1, 0.36, 1)", "purpose": "Recommended ease-out-quart for state changes. No bounce, no elastic." }
+    ],
+    "breakpoints": []
+  },
+  "components": [
+    {
+      "name": "Panel",
+      "kind": "card",
+      "refersTo": "panel",
+      "description": "Structural frame for a screen region (chat list, transcript, participants, composer). Flat, bordered, never a stackable card.",
+      "html": "<div class=\"ds-panel\">Panel region</div>",
+      "css": ".ds-panel { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 12px; color: #c9d1d9; }"
+    },
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The single filled action (Send). Dark text on Signal Blue. The only blue, filled button on any screen.",
+      "html": "<button class=\"ds-btn-primary\">Send</button>",
+      "css": ".ds-btn-primary { background: #58a6ff; color: #0d1117; font-weight: 600; border: none; border-radius: 6px; padding: 10px 20px; cursor: pointer; transition: filter 180ms cubic-bezier(0.22,1,0.36,1); } .ds-btn-primary:hover { filter: brightness(1.1); } .ds-btn-primary:focus-visible { outline: 2px solid #58a6ff; outline-offset: 2px; }"
+    },
+    {
+      "name": "Composer Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Vertically resizable message textarea. Recessed below its surrounding panel (canvas fill), border shifts to accent on focus.",
+      "html": "<textarea class=\"ds-input\" rows=\"3\" placeholder=\"Type a message…\"></textarea>",
+      "css": ".ds-input { background: #0d1117; color: #c9d1d9; border: 1px solid #30363d; border-radius: 6px; padding: 10px 12px; font-family: inherit; font-size: 15px; line-height: 1.5; min-height: 80px; resize: vertical; outline: none; } .ds-input::placeholder { color: #8b949e; } .ds-input:focus-visible { border-color: #58a6ff; }"
+    },
+    {
+      "name": "Agent Stream Item",
+      "kind": "custom",
+      "refersTo": "agent-stream-item",
+      "description": "Signature component: ephemeral live narration/tool output for one working agent. Reads as provisional — dimmed and quieter than committed messages. Rewritten here without the banned side-stripe.",
+      "html": "<div class=\"ds-stream\"><div class=\"ds-stream-author\">Claude is working…</div><div class=\"ds-stream-line\">Reading messages_storage.py</div><div class=\"ds-stream-line\">🔧 grep \"def get_response\"</div></div>",
+      "css": ".ds-stream { opacity: 0.7; font-style: italic; margin: 0.25rem 0; padding: 8px 12px; background: rgba(255,255,255,0.02); border: 1px solid #21262d; border-radius: 6px; color: #c9d1d9; } .ds-stream-author { font-weight: 600; font-style: normal; margin-bottom: 4px; } .ds-stream-line { font-size: 0.85em; white-space: pre-wrap; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Quiet Control Room",
+    "overview": "Manylogue is a room where several minds work at once and you watch the conversation settle. Many agents are active, but the space stays calm: muted ink on a near-black canvas, surfaces that recede, a single blue that lights up only what matters right now. It belongs to the lineage of terminal-adjacent agent tools (Claude Desktop, Codex, OpenCode) and should feel familiar to anyone who lives in them, then earn a second look through restraint and finish, not decoration. The system is flat and tonal: depth from three steps of near-black, never shadow; one system sans for UI, mono only for machine output; the accent rare by doctrine. Its job is to make the multi-agent state legible, then disappear into the task.",
+    "keyCharacteristics": [
+      "Near-black canvas, three-step tonal depth, zero shadows at rest.",
+      "One system-sans family; mono only for code and agent/tool identifiers.",
+      "A single blue accent, used on roughly ≤10% of any screen.",
+      "Calm under constant streaming: nothing jumps, nothing shouts.",
+      "Keyboard-first, desktop-dense, uncompromising finish."
+    ],
+    "rules": [
+      { "name": "The One Voice Rule", "body": "Signal Blue is the only chroma in the system and appears on ≤10% of any screen. If two things are blue, one of them is wrong. Status that is not act-here / focus-here / live-now is expressed in the neutral ramp, not in color.", "section": "colors" },
+      { "name": "The Token-Only Rule", "body": "Every color is one of the ten tokens. Raw hex in a component (the stray #ccc and #f8f8f2 in today's CSS) is a defect, not a shade.", "section": "colors" },
+      { "name": "The Mono-Means-Machine Rule", "body": "Monospace signals literal machine output: code, tool names, identifiers. Never use it for chrome or prose to look technical; the sans already carries that.", "section": "typography" },
+      { "name": "The Flat Room Rule", "body": "Surfaces are flat at rest. Depth is tonal, never a shadow. The only license for a shadow is a genuinely floating layer (dropdown, dialog), and then one restrained soft shadow as a response to elevation.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do build surfaces as flat panels: Surface fill (#161b22), 1px Hairline (#30363d), 8px radius. Depth is tonal, never a shadow.",
+      "Do reserve Signal Blue (#58a6ff) for primary action, focus, current selection, and live state — ≤10% of any screen.",
+      "Do keep one system-sans family for all UI; use mono only for code and machine identifiers.",
+      "Do give every interactive element a visible :focus-visible state. The audience navigates by keyboard.",
+      "Do keep motion to 150-250ms state transitions, each paired with a prefers-reduced-motion fallback.",
+      "Do make ephemeral agent output read as quieter and more provisional than committed messages."
+    ],
+    "donts": [
+      "Don't use side-stripe borders — a border-left/right thicker than 1px as a colored accent. The current .agent-stream-item border-left: 2px solid #ccc is a live violation.",
+      "Don't drift toward a generic SaaS dashboard: no card grids, no gradient accents, no hero-metric blocks.",
+      "Don't drift toward an enterprise IDE: no overwhelming panels, dense toolbars, or settings sprawl.",
+      "Don't introduce gradient text or glassmorphism. This palette is flat and solid by doctrine.",
+      "Don't hardcode color outside the ten tokens (today's strays: #ccc, #f8f8f2).",
+      "Don't let one non-content element shout — the 32px message Author is louder than the minimal target.",
+      "Don't let chat-list names overflow or wrap; truncate with ellipsis inside the fixed column."
+    ]
+  }
+}

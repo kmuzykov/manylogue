@@ -1,0 +1,4 @@
+adapter = "ClaudeAdapter"
+description = "Vanilla Claude / No Role / Fable"
+role = "roles/empty_role.md"
+model = "claude-fable-5"

@@ -1,0 +1,4 @@
+adapter = "CodexAdapter"
+description = "Vanilla Codex / No Role"
+role = "roles/empty_role.md"
+model = "gpt-5.5"

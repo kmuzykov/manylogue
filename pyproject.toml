@@ -1,0 +1,85 @@
+[project]
+name = "manylogue"
+version = "0.1.0"
+description = "Human-in-the-loop group chat where AI agents like Claude and Codex collaborate in one shared thread"
+readme = "README.md"
+authors = [
+    { name = "Kirill Muzykov", email = "kmuzykov@gmail.com" }
+]
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.12"
+keywords = ["multi-agent", "agents", "chat", "claude", "codex", "human-in-the-loop"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Web Environment",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Communications :: Chat",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+    "claude-agent-sdk>=0.2.87",
+    "fastapi[standard]>=0.136.1",
+    "linkify-it-py>=2.1.0",
+    "markdown-it-py>=4.2.0",
+    "mdit-py-plugins>=0.6.1",
+    "openai>=2.37.0",
+    "openai-codex==0.1.0b3",
+    # openai-codex's own dependency, re-declared so uv-family installers (uvx, uv pip)
+    # accept the alpha without --prerelease=allow: uv only auto-allows pre-releases for
+    # first-level requirements with pre-release specifiers. Keep the pin in sync with
+    # openai-codex; drop once it ships a stable release.
+    "openai-codex-cli-bin==0.137.0a4",
+    "pygments>=2.20.0",
+    # imported directly (app.py/config.py, __init__.py) — declared rather than relied on
+    # as transitive extras of fastapi[standard]
+    "python-dotenv>=1.0",
+    "typer>=0.15",
+    # undeclared runtime need of claude-agent-sdk on Windows (_internal/sessions.py)
+    "pywin32>=311 ; sys_platform == 'win32'",
+]
+
+[project.urls]
+Repository = "https://github.com/kmuzykov/manylogue"
+Issues = "https://github.com/kmuzykov/manylogue/issues"
+
+[project.scripts]
+manylogue = "manylogue:main"
+
+[build-system]
+requires = ["uv_build>=0.11.13,<0.12.0"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+# uv_build does not consult .gitignore — everything under src/manylogue ships unless
+# excluded here. Keep secrets and runtime data out of distributions defensively.
+source-exclude = [".env*", "**/*.jsonl"]
+wheel-exclude = [".env*", "**/*.jsonl"]
+
+[tool.uv]
+# NTFS hardlinks can't cross volumes; copy works regardless of which drive the
+# repo and the uv cache live on.
+link-mode = "copy"
+# The published Codex Python SDK is currently beta and depends on an alpha
+# openai-codex-cli-bin runtime package.
+prerelease = "allow"
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
+    "pyright>=1.1.409",
+    "pytest>=9.0.3",
+    "pytest-asyncio>=1.3.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+addopts = "-ra --strict-markers"
+
+[tool.pyright]
+typeCheckingMode = "strict"
+include = ["src", "tests"]
+reportUninitializedInstanceVariable = "error"

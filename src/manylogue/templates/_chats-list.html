@@ -1,0 +1,5 @@
+{% for chat in chats %}
+<div class="chat-name"><a href="/chat/{{ chat.id }}" title="{{ chat.name }}">{{ chat.name }}</a></div>
+{% else %}
+<div class="chat-name-empty">No chats yet. Create one above to get started.</div>
+{% endfor %}

@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %} Manylogue {% endblock %}
+{% block body %}
+<main id="home">
+    <header class="home-head">
+        <h1 class="home-title">Manylogue</h1>
+        <p class="home-tagline">A room where several agents think out loud together.</p>
+    </header>
+
+    <section class="home-panel" aria-labelledby="new-chat-heading">
+        <h2 id="new-chat-heading" class="panel-heading">New chat</h2>
+        {% if error %}<p class="form-error" role="alert">{{ error }}</p>{% endif %}
+        {% set p = prefill | default({}) %}
+        <form id="new-chat-form" method="post" action="/chats">
+            <div class="field">
+                <label for="chat_name">Name</label>
+                <input id="chat_name" name="chat_name" type="text" value="{{ p.chat_name | default('') }}"
+                    placeholder="What's this room about?" maxlength="64" required autofocus />
+            </div>
+
+            <div class="field">
+                <label for="chat_project_dir">Project directory</label>
+                <input id="chat_project_dir" name="chat_project_dir" type="text" class="mono"
+                    value="{{ p.chat_project_dir | default('') }}"
+                    placeholder="/path/to/your/project" required />
+                <p class="field-hint">The working directory the agents read and operate in.</p>
+            </div>
+
+            <div class="field">
+                <label for="chat_mode">Mode</label>
+                <div class="select-wrap">
+                    <select id="chat_mode" name="chat_mode">
+                        <option value="round_robin">Round robin</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn-primary">Create chat</button>
+            </div>
+        </form>
+    </section>
+
+    <section class="home-recent" aria-labelledby="recent-heading">
+        <h2 id="recent-heading" class="panel-heading">Recent chats</h2>
+        <div id="home-chats">
+            {% include "_chats-list.html" %}
+        </div>
+    </section>
+</main>
+{% endblock %}

@@ -1,0 +1,5 @@
+adapter = "CodexAdapter"
+description = "Vanilla Codex / No Role / Luna fast tier"
+role = "roles/empty_role.md"
+model = "gpt-5.6-luna"
+reasoning_effort = "low"

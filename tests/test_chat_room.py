@@ -218,6 +218,21 @@ async def test_broken_def_restores_as_missing_not_crash(tmp_path: Path) -> None:
     assert reopened.get_roster_names() == ["Human"]
 
 
+async def test_def_with_unknown_key_restores_as_missing_not_crash(tmp_path: Path) -> None:
+    # extra="forbid" on AgentDefinition: a typo'd key fails validation loudly and the
+    # seat degrades to MissingAgent — instead of silently running with defaults.
+    write_agent_def(tmp_path, "Typo", extra_lines='reasonning_effort = "high"\n')
+    room = ChatRoom.create(tmp_path, tmp_path, "test")
+    ChatParticipantsStorage(ChatRoom.get_chat_dir(tmp_path, room.chat_id)).save(
+        [PersistedParticipant(def_name="Typo", name="Typo", directory=str(tmp_path))])
+
+    reopened = ChatRoom.open(tmp_path, room.chat_id)  # must not raise
+    assert reopened is not None
+    view = {(v.name, v.is_missing) for v in reopened.get_participants_view()}
+    assert ("Typo", True) in view
+    assert reopened.get_roster_names() == ["Human"]
+
+
 async def test_add_broken_def_is_skipped_not_crash(tmp_path: Path) -> None:
     # Adding a def with an unknown adapter logs + skips; it never crashes the request.
     write_agent_def(tmp_path, "Bad", adapter="BogusAdapter")

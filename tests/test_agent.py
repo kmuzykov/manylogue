@@ -1,4 +1,8 @@
-from manylogue.agents import Agent, MissingAgent, PersistedParticipant, Role
+import logging
+
+import pytest
+
+from manylogue.agents import Agent, AgentDefinition, MissingAgent, PersistedParticipant, Role
 from manylogue.agents.agent import SKIP_SENTINEL
 from manylogue.messages import (
     AdapterIntermediateResponse, AgentTurnOutcome, MessageKind, MessagesStorage)
@@ -112,6 +116,26 @@ def test_agent_to_record_reflects_identity() -> None:
     assert record.def_name == DEFAULT_AGENT_NAME
     assert record.name == DEFAULT_AGENT_NAME
     assert record.directory == ""
+
+
+def test_codex_def_with_bad_effort_raises_at_build() -> None:
+    # The exact exception chat_room's add-skip / restore-as-MissingAgent handling relies on.
+    definition = AgentDefinition(adapter="CodexAdapter", name="Codex", description="test",
+                                 role="", model="gpt-5.6-sol", reasoning_effort="ultra")
+    with pytest.raises(ValueError, match="reasoning_effort"):
+        Agent.from_definition(definition, Role(), "")
+
+
+def test_claude_def_ignores_reasoning_effort_with_warning(
+        caplog: pytest.LogCaptureFixture) -> None:
+    definition = AgentDefinition(adapter="ClaudeAdapter", name="Claude", description="test",
+                                 role="", model="claude-fable-5", reasoning_effort="high")
+
+    with caplog.at_level(logging.WARNING):
+        agent = Agent.from_definition(definition, Role(), "")
+
+    assert agent.agent_name == "Claude"
+    assert "reasoning_effort" in caplog.text
 
 
 async def test_missing_agent_skips_turn(storage: MessagesStorage) -> None:

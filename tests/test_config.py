@@ -14,6 +14,14 @@ def test_seeding_copies_packaged_defaults(tmp_path: Path) -> None:
     assert home == tmp_path
     assert (tmp_path / ".manylogue" / "agents" / "Claude.toml").is_file()
     assert (tmp_path / ".manylogue" / "roles" / "empty_role.md").is_file()
+    # gpt-5.6 tier defs ship as defaults; per-file seeding also delivers them
+    # into existing homes on next boot
+    assert (tmp_path / ".manylogue" / "agents" / "Codex_Sol.toml").is_file()
+    assert (tmp_path / ".manylogue" / "agents" / "Codex_Terra.toml").is_file()
+    assert (tmp_path / ".manylogue" / "agents" / "Codex_Luna.toml").is_file()
+    # Codex was renamed to Codex_55 (2026-07-10) — the old stem must not ship again
+    assert (tmp_path / ".manylogue" / "agents" / "Codex_55.toml").is_file()
+    assert not (tmp_path / ".manylogue" / "agents" / "Codex.toml").exists()
 
 
 def test_seeding_never_overwrites_user_edits(tmp_path: Path) -> None:

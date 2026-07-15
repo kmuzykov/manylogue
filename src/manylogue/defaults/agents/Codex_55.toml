@@ -1,4 +1,4 @@
 adapter = "CodexAdapter"
-description = "Vanilla Codex / No Role"
+description = "Vanilla Codex / No Role / gpt-5.5 (previous gen)"
 role = "roles/empty_role.md"
 model = "gpt-5.5"

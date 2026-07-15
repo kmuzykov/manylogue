@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 from collections.abc import Callable, Sequence, Sized
 from typing import Any
 
@@ -26,16 +27,30 @@ from manylogue.adapters.base_adapter import BaseAdapter
 from manylogue.messages import Message
 
 CODEX_DEFAULT_MODEL = "gpt-5.5"
+CODEX_DEFAULT_EFFORT = ReasoningEffort.medium
 
 logger = logging.getLogger(__name__)
 
 
 class CodexAdapter(BaseAdapter):
     _model: str
+    _effort: ReasoningEffort
 
-    def __init__(self, working_dir: str, model: str = CODEX_DEFAULT_MODEL) -> None:
+    def __init__(self, working_dir: str, model: str = CODEX_DEFAULT_MODEL,
+                 reasoning_effort: str | None = None) -> None:
         super().__init__(working_dir)
         self._model = model
+
+        if reasoning_effort is None:
+            self._effort = CODEX_DEFAULT_EFFORT
+        else:
+            try:
+                self._effort = ReasoningEffort(reasoning_effort)
+            except ValueError:
+                allowed = ", ".join(e.value for e in ReasoningEffort)
+                raise ValueError(
+                    f"Unknown reasoning_effort {reasoning_effort!r}; allowed: {allowed}"
+                ) from None
 
     async def get_response(self,
                            agent_name: str,
@@ -51,8 +66,16 @@ class CodexAdapter(BaseAdapter):
             agent_name, roster, new_messages)
         session_id = self.get_session_id()
 
+        # Escape hatch for when the bundled CLI lags behind newly released models
+        # (e.g. gpt-5.6 rejected the pinned 0.137 runtime server-side): point
+        # MANYLOGUE_CODEX_BIN at a current standalone codex executable. Unset -> the
+        # SDK's bundled runtime, as before.
+        config = CodexConfig(
+            cwd=self._working_dir,
+            codex_bin=os.environ.get("MANYLOGUE_CODEX_BIN"))
+
         try:
-            async with AsyncCodex(config=CodexConfig(cwd=self._working_dir)) as codex:
+            async with AsyncCodex(config=config) as codex:
                 if session_id:
                     try:
                         thread = await codex.thread_resume(
@@ -70,7 +93,7 @@ class CodexAdapter(BaseAdapter):
                     prompt = system_prompt + "\n\n" + combined_prompt
 
                 # todo: make the reasoning summary a configurable value
-                turn = await thread.turn(prompt, cwd=self._working_dir, model=self._model, summary=ReasoningSummary(root=ReasoningSummaryValue.concise), effort=ReasoningEffort.high)
+                turn = await thread.turn(prompt, cwd=self._working_dir, model=self._model, summary=ReasoningSummary(root=ReasoningSummaryValue.concise), effort=self._effort)
 
                 answer_parts: list[str] = []
                 reasoning_parts: list[str] = []

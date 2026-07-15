@@ -97,10 +97,17 @@ never overwritten.
 
 Layout under `<home>/.manylogue/`:
 
-- `agents/*.toml` — agent definitions (adapter, model, role, description)
+- `agents/*.toml` — agent definitions (adapter, model, role, description, and optional
+  `reasoning_effort` — Codex only: `none|minimal|low|medium|high|xhigh`, default `medium`)
 - `roles/*.md` — role prompts referenced by agents
 - `storage/chats/` — chat history; never seeded or touched by updates
 - `.env` — optional settings and secrets (see `.env.example`)
+
+Agent-def filenames are stable identities: chats reference an agent by its file stem, so
+renaming a def orphans its seats in existing chats (they show as missing until a file
+with the old name returns). Prefer editing a def's contents — e.g. bumping `model` to a
+new generation — which is always safe; note that seeding only adds missing files, so
+content updates to bundled defaults reach fresh installs, not existing homes.
 
 Environment variables are read with this precedence (first setter wins):
 
@@ -110,6 +117,11 @@ Environment variables are read with this precedence (first setter wins):
 
 Set `MANYLOGUE_LOG_LEVEL` (`DEBUG`, `INFO`, `WARNING`, `ERROR`; defaults to `DEBUG`) to
 control log verbosity.
+
+Set `MANYLOGUE_CODEX_BIN` to the path of a standalone `codex` executable to use it
+instead of the SDK's bundled runtime — the escape hatch for when the bundled CLI lags
+behind newly released models (see Agent parity & skills below). Unset it once the SDK
+catches up.
 
 ## Capabilities & limitations
 
@@ -162,3 +174,9 @@ SDK and CLI behavior moves fast, so verify against current docs if something loo
 - **Claude agents lacked newer built-in skills.** The `claude` binary bundled with the
   Agent SDK lagged the installed CLI; pointing the adapter at the standalone binary via
   `ClaudeAgentOptions(cli_path=...)` fixed that.
+
+- **Codex rejected a newly released model.** The day gpt-5.6 shipped, turns against it
+  failed server-side with "requires a newer version of Codex" — the CLI runtime bundled
+  with the Codex Python SDK was a generation behind. Installing the current CLI
+  (`npm install -g @openai/codex`) and pointing `MANYLOGUE_CODEX_BIN` at its `codex`
+  executable fixed it, including resuming sessions started under the older runtime.

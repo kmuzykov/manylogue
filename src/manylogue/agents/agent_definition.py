@@ -9,13 +9,16 @@ class AgentDefinition(BaseModel):
     (brain) to run, which role file (soul) to load, and the model. Defined once, offered
     in the participant picker, and resolved into a live Agent when added to a chat.
     """
-    model_config = ConfigDict(frozen=True)
+    # extra="forbid": these are hand-edited files — a misspelled key must fail loudly
+    # (broken defs degrade to MissingAgent), not silently run with defaults.
+    model_config = ConfigDict(frozen=True, extra="forbid")
 
     adapter: str
     name: str
     description: str
     role: str
     model: str
+    reasoning_effort: str | None = None
 
     @staticmethod
     def __load(agent_definition_file: Path) -> "AgentDefinition":

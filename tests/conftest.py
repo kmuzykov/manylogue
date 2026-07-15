@@ -59,14 +59,18 @@ def make_agent(*responses: AdapterIntermediateResponse | AdapterFinalResponse) -
 
 
 def write_agent_def(home: Path, name: str, *, adapter: str = "FakeAdapter",
-                    role: str = "", model: str = "") -> None:
+                    role: str = "", model: str = "",
+                    reasoning_effort: str | None = None,
+                    extra_lines: str = "") -> None:
     """Write a minimal agent-def toml into <home>/.manylogue/agents so load_one finds it.
     The name comes from the file stem (load() overrides any name in the toml)."""
     agents_dir = home / ".manylogue" / "agents"
     agents_dir.mkdir(parents=True, exist_ok=True)
-    (agents_dir / f"{name}.toml").write_text(
-        f'adapter = "{adapter}"\ndescription = "test"\nrole = "{role}"\nmodel = "{model}"\n',
-        encoding="utf-8")
+    body = f'adapter = "{adapter}"\ndescription = "test"\nrole = "{role}"\nmodel = "{model}"\n'
+    if reasoning_effort is not None:
+        body += f'reasoning_effort = "{reasoning_effort}"\n'
+    body += extra_lines
+    (agents_dir / f"{name}.toml").write_text(body, encoding="utf-8")
 
 
 def _fake_build_adapter(definition: AgentDefinition, working_dir: str) -> BaseAdapter:

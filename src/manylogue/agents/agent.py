@@ -240,9 +240,14 @@ class Agent(AgentBase):
         # todo: a more elegant way (e.g. registry to allow user expansion) than a matcher over adapter names
         match definition.adapter:
             case "ClaudeAdapter":
+                if definition.reasoning_effort is not None:
+                    logger.warning(
+                        "Agent def %s: reasoning_effort is not supported by ClaudeAdapter — ignored",
+                        definition.name)
                 return ClaudeAdapter(working_dir, definition.model)
             case "CodexAdapter":
-                return CodexAdapter(working_dir, definition.model)
+                return CodexAdapter(working_dir, definition.model,
+                                    definition.reasoning_effort)
             case _:
                 raise ValueError(f"Unknown agent adapter: {definition.adapter}")
 
